@@ -30,7 +30,7 @@
 
 ```bash
 # 从源码构建（推荐，无需预编译 jar）
-git clone https://github.com/<your-user>/DGLab-Relay-Server.git
+git clone https://github.com/MCSakura/DGLab-Relay-Server.git
 cd DGLab-Relay-Server
 mvn clean package -DskipTests
 # 产物: target/DGLab-Relay-Server.jar
@@ -38,7 +38,30 @@ mvn clean package -DskipTests
 
 或直接在 **Releases** 下载预编译 jar。
 
-### 启动
+### 启动（Windows 用户最快上手）
+
+**双击 `start.bat`** → 弹出交互式菜单：
+
+| 编号 | 模式 | 场景 |
+|------|------|------|
+| 1 | 局域网 | 同 WiFi 手机连电脑，自动探测公网 IP |
+| 2 | 局域网快速 | 跳过公网探测，启动更快（开发调试推荐） |
+| 3 | 穿透模式 | frp / ngrok / cloudflared 公网部署，粘贴穿透地址即可 |
+| 4 | 服务器后台 | 无 HTTP 状态页、不自动开浏览器，纯 WS |
+| 5 | 开发者 | 从源码 mvn clean package 后立即启动 |
+| 6 | 最简 | 8080 + 默认参数 |
+| 7 | 自定义 | 自己拼完整命令行参数 |
+
+**命令行参数（跳过菜单直接启动）：**
+
+```bash
+start.bat lan-fast                      # 局域网快速
+start.bat tunnel ws://game.abc.com:8843 # 穿透模式带地址
+start.bat server                        # 服务器后台
+start.bat quick                         # 最简 8080
+```
+
+### 启动（跨平台通用）
 
 ```bash
 # 最简（默认 8080 端口、启动 HTTP 状态页、自动探测公网 IP、自动打开浏览器）
