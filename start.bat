@@ -165,7 +165,9 @@ echo(
 REM =====================================================================
 REM  Step 2: Check JAR file
 REM =====================================================================
+REM 查找优先级: 同目录 > target/DGLab-Relay-Server.jar (mvn 构建产物)
 set "JAR=%~dp0DGLab-Relay-Server.jar"
+if not exist "%JAR%" set "JAR=%~dp0target\DGLab-Relay-Server.jar"
 call :PRINT_SECTION STEP2_HEADER
 if exist "%JAR%" goto JAR_FOUND
 
