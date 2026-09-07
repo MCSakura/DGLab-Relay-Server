@@ -1,6 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
+rem 关键：控制台切 UTF-8，同时 JVM 三个编码参数显式切 UTF-8（Windows 默认 GBK，强制对齐才能避免中文乱码）
 chcp 65001 >nul 2>&1
+set "JAVA_OPTS=-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+
 title DG-LAB 郊狼中转服务 - 启动器
 
 rem ================================================================
@@ -181,7 +184,7 @@ rem --- 模式7: 自定义命令行 ---
 :MODE_CUSTOM
 echo.
 echo  已拼命令行:
-echo    java -jar "%JAR_FILE%" [你的参数]
+echo    java %JAVA_OPTS% -jar "%JAR_FILE%" [你的参数]
 echo.
 echo  可用参数 (直接回车跳过):
 echo    -p / --port ^<数字^>       指定 WS 端口 (默认 8080)
@@ -207,10 +210,10 @@ if not exist "%JAR_FILE%" (
 )
 echo.
 echo ════════════════════════════════════════════════
-echo  java -jar "%JAR_FILE%" %ARGS%
+echo  java %JAVA_OPTS% -jar "%JAR_FILE%" %ARGS%
 echo ════════════════════════════════════════════════
 echo.
-java -jar "%JAR_FILE%" %ARGS%
+java %JAVA_OPTS% -jar "%JAR_FILE%" %ARGS%
 echo.
 echo 进程已结束，退出码 %ERRORLEVEL%
 pause
