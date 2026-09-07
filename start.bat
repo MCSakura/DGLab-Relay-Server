@@ -1,44 +1,41 @@
 @echo off
 setlocal EnableDelayedExpansion
-rem å…³é”®ï¼šæ§åˆ¶å°åˆ‡ UTF-8ï¼ŒåŒæ—¶ JVM ä¸‰ä¸ªç¼–ç å‚æ•°æ˜¾å¼åˆ‡ UTF-8ï¼ˆWindows é»˜è®¤ GBKï¼Œå¼ºåˆ¶å¯¹é½æ‰èƒ½é¿å…ä¸­æ–‡ä¹±ç ï¼‰
-chcp 65001 >nul 2>&1
-set "JAVA_OPTS=-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
-
-title DG-LAB éƒŠç‹¼ä¸­è½¬æœåŠ¡ - å¯åŠ¨å™¨
 
 rem ================================================================
-rem DG-LAB (éƒŠç‹¼) WebSocket ä¸­è½¬æœåŠ¡ å¯åŠ¨è„šæœ¬ (Windows / ç®€ä½“ä¸­æ–‡)
-rem åŒå‡»æœ¬æ–‡ä»¶ â†’ äº¤äº’å¼èœå•é€‰æ‹©æ¨¡å¼ â†’ å¯åŠ¨
-rem ä¹Ÿå¯ä»¥å‘½ä»¤è¡Œå¸¦å‚æ•°è·³è¿‡èœå•ï¼š
-rem   start.bat lan              å±€åŸŸç½‘æ¨¡å¼ (è‡ªåŠ¨æ¢æµ‹å…¬ç½‘IPã€å¯åŠ¨HTTPçŠ¶æ€é¡µ)
-rem   start.bat lan-fast         å±€åŸŸç½‘å¿«é€Ÿæ¨¡å¼ (è·³è¿‡å…¬ç½‘æ¢æµ‹)
-rem   start.bat tunnel <ws-url>  ç©¿é€æ¨¡å¼
-rem   start.bat server           æœåŠ¡å™¨åå°æ¨¡å¼ (ä¸è‡ªåŠ¨å¼€æµè§ˆå™¨)
-rem   start.bat build            å¼€å‘è€…æ¨¡å¼ (mvn package åå†å¯åŠ¨)
-rem   start.bat quick            æœ€ç®€: 8080 + é»˜è®¤å‚æ•°
+rem DG-LAB (½¼ÀÇ) WebSocket ÖĞ×ª·şÎñ Æô¶¯½Å±¾ (Windows / ¼òÌåÖĞÎÄ)
+rem ËµÃ÷: ±¾½Å±¾Ê¹ÓÃ GBK ±àÂë±£´æ, Óë Windows CMD Ä¬ÈÏ´úÂëÒ³¶ÔÆë,
+rem       ËùÒÔ¼ÈÖ§³ÖÖĞÎÄ²Ëµ¥Ò²²»»áÒò±àÂëÎÊÌâ±¨"²»ÊÇÄÚ²¿»òÍâ²¿ÃüÁî".
+rem Ë«»÷±¾ÎÄ¼ş -> ½»»¥Ê½²Ëµ¥Ñ¡ÔñÄ£Ê½ -> Æô¶¯
+rem Ò²¿ÉÒÔÃüÁîĞĞ´ø²ÎÊıÌø¹ı²Ëµ¥:
+rem   start.bat lan              ¾ÖÓòÍøÄ£Ê½ (×Ô¶¯Ì½²â¹«ÍøIP¡¢Æô¶¯HTTP×´Ì¬Ò³)
+rem   start.bat lan-fast         ¾ÖÓòÍø¿ìËÙÄ£Ê½ (Ìø¹ı¹«ÍøÌ½²â)
+rem   start.bat tunnel <ws-url>  ´©Í¸Ä£Ê½
+rem   start.bat server           ·şÎñÆ÷ºóÌ¨Ä£Ê½ (²»×Ô¶¯¿ªä¯ÀÀÆ÷)
+rem   start.bat build            ¿ª·¢ÕßÄ£Ê½ (mvn package ºóÔÙÆô¶¯)
+rem   start.bat quick            ×î¼ò: 8080 + Ä¬ÈÏ²ÎÊı
 rem ================================================================
 
-rem --- 0. åˆ‡åˆ°è„šæœ¬æ‰€åœ¨ç›®å½•ï¼ˆåŒå‡»å¯åŠ¨æ—¶ä¹Ÿèƒ½æ‰¾åˆ° jarï¼‰---
+rem --- 0. ÇĞµ½½Å±¾ËùÔÚÄ¿Â¼ (Ë«»÷Æô¶¯Ê±Ò²ÄÜÕÒµ½ jar) ---
 cd /d "%~dp0"
 
-rem --- 1. è‡ªåŠ¨å®šä½ jarï¼ˆä¼˜å…ˆ target/ ä¸‹å¸¦ç‰ˆæœ¬çš„äº§ç‰©ï¼Œå†å…œåº• target/DGLab-Relay-Server.jarï¼‰---
+rem --- 1. ×Ô¶¯¶¨Î» jar (ÓÅÏÈ target/ ÏÂ´ø°æ±¾µÄ²úÎï, ÔÙ¶µµ× target/DGLab-Relay-Server.jar) ---
 set "JAR_FILE="
 for /f "delims=" %%f in ('dir /b target\DGLabWebSocketRelay-*.jar 2^>nul ^| findstr /v shaded') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" for /f "delims=" %%f in ('dir /b target\DGLab-Relay-Server.jar 2^>nul') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" set "JAR_FILE=target\DGLab-Relay-Server.jar"
 
-rem --- 2. java è‡ªæ£€ ---
+rem --- 2. java ×Ô¼ì ---
 where java >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] æœªæ£€æµ‹åˆ° Javaï¼Œè¯·å…ˆå®‰è£… JDK 17+ å¹¶é…ç½® PATHã€‚
-    echo        ä¸‹è½½: https://adoptium.net/
+    echo [´íÎó] Î´¼ì²âµ½ Java, ÇëÏÈ°²×° JDK 17+ ²¢ÅäÖÃ PATH.
+    echo        ÏÂÔØ: https://adoptium.net/
     pause
     exit /b 1
 )
 for /f "tokens=3" %%v in ('java -version 2^>^&1 ^| findstr /i "version"') do set "JAVA_VER=%%~v"
-echo [ç¯å¢ƒ] Java %JAVA_VER%
+echo [»·¾³] Java %JAVA_VER%
 
-rem --- 3. å‘½ä»¤è¡Œå‚æ•°è§£æ ---
+rem --- 3. ÃüÁîĞĞ²ÎÊı½âÎö ---
 set "MODE=%~1"
 if /i "%MODE%"=="lan-gui"   set "MODE=lan"
 if /i "%MODE%"=="network"   set "MODE=lan"
@@ -47,24 +44,24 @@ if /i "%MODE%"=="no-http"   set "MODE=server"
 
 if not "%MODE%"=="" goto :RUN_MODE
 
-rem --- 4. ä¸»èœå• ---
+rem --- 4. Ö÷²Ëµ¥ ---
 :MENU
 cls
-echo â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-echo â•‘    DG-LAB éƒŠç‹¼ WebSocket ä¸­è½¬æœåŠ¡  å¯åŠ¨å™¨     â•‘
-echo â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+echo ========================================================
+echo    DG-LAB ½¼ÀÇ WebSocket ÖĞ×ª·şÎñ  Æô¶¯Æ÷
+echo ========================================================
 echo.
-echo   [1] å±€åŸŸç½‘æ¨¡å¼       â€” åŒä¸€ WiFi æ‰‹æœºè¿ç”µè„‘ï¼Œè‡ªåŠ¨æ¢æµ‹å…¬ç½‘IP
-echo   [2] å±€åŸŸç½‘å¿«é€Ÿæ¨¡å¼   â€” è·³è¿‡å…¬ç½‘æ¢æµ‹ï¼Œå¯åŠ¨æ›´å¿« (æ¨èå¼€å‘è°ƒè¯•)
-echo   [3] ç©¿é€æ¨¡å¼         â€” frp / ngrok / cloudflared å…¬ç½‘éƒ¨ç½²
-echo   [4] æœåŠ¡å™¨åå°æ¨¡å¼   â€” ä¸è‡ªåŠ¨å¼€æµè§ˆå™¨ï¼Œä¸å« HTTP çŠ¶æ€é¡µ
-echo   [5] å¼€å‘è€…æ¨¡å¼       â€” ä»æºç æ„å»ºåå†å¯åŠ¨ (éœ€ mvn)
-echo   [6] æœ€ç®€å¯åŠ¨         â€” ç«¯å£ 8080ï¼Œé»˜è®¤æ‰€æœ‰å‚æ•°
-echo   [7] è‡ªå®šä¹‰å‚æ•°       â€” è‡ªå·±æ‹¼å‘½ä»¤è¡Œ
+echo   [1] ¾ÖÓòÍøÄ£Ê½       -- Í¬Ò» WiFi ÊÖ»úÁ¬µçÄÔ, ×Ô¶¯Ì½²â¹«ÍøIP
+echo   [2] ¾ÖÓòÍø¿ìËÙÄ£Ê½   -- Ìø¹ı¹«ÍøÌ½²â, Æô¶¯¸ü¿ì (ÍÆ¼ö¿ª·¢µ÷ÊÔ)
+echo   [3] ´©Í¸Ä£Ê½         -- frp / ngrok / cloudflared ¹«Íø²¿Êğ
+echo   [4] ·şÎñÆ÷ºóÌ¨Ä£Ê½   -- ²»×Ô¶¯¿ªä¯ÀÀÆ÷, ²»º¬ HTTP ×´Ì¬Ò³
+echo   [5] ¿ª·¢ÕßÄ£Ê½       -- ´ÓÔ´Âë¹¹½¨ºóÔÙÆô¶¯ (Ğè mvn)
+echo   [6] ×î¼òÆô¶¯         -- ¶Ë¿Ú 8080, Ä¬ÈÏËùÓĞ²ÎÊı
+echo   [7] ×Ô¶¨Òå²ÎÊı       -- ×Ô¼ºÆ´ÃüÁîĞĞ
 echo.
-echo   [Q] é€€å‡º
+echo   [Q] ÍË³ö
 echo.
-set /p "CHOICE=è¯·é€‰æ‹©æ¨¡å¼ [1-7 / Q]: "
+set /p "CHOICE=ÇëÑ¡ÔñÄ£Ê½ [1-7 / Q]: "
 if "%CHOICE%"=="" goto :RUN_MODE
 if /i "%CHOICE%"=="1" set "MODE=lan"      & goto :RUN_MODE
 if /i "%CHOICE%"=="2" set "MODE=lan-fast" & goto :RUN_MODE
@@ -77,13 +74,13 @@ if /i "%CHOICE%"=="Q" exit /b 0
 goto :MENU
 
 rem ================================================================
-rem 5. æ‰§è¡Œå¯¹åº”æ¨¡å¼
+rem 5. Ö´ĞĞ¶ÔÓ¦Ä£Ê½
 rem ================================================================
 :RUN_MODE
 
 echo.
-echo  â”œâ”€ å·¥ä½œç›®å½•: %CD%
-echo  â”œâ”€ JAR æ–‡ä»¶: %JAR_FILE%
+echo   - ¹¤×÷Ä¿Â¼: %CD%
+echo   - JAR ÎÄ¼ş: %JAR_FILE%
 echo.
 
 if /i "%MODE%"=="lan"      goto :MODE_LAN
@@ -94,127 +91,127 @@ if /i "%MODE%"=="build"    goto :MODE_BUILD
 if /i "%MODE%"=="quick"    goto :MODE_QUICK
 if /i "%MODE%"=="custom"   goto :MODE_CUSTOM
 
-rem é»˜è®¤ (æœªè¯†åˆ«æ¨¡å¼ / æ— å‚æ•°) â†’ äº¤äº’è¾“å…¥åé‡è¿›èœå•
-echo [æç¤º] æœªè¯†åˆ«æ¨¡å¼ "%MODE%"ï¼Œè¯·åœ¨èœå•ä¸­é€‰æ‹©ã€‚
+rem Ä¬ÈÏ (Î´Ê¶±ğÄ£Ê½ / ÎŞ²ÎÊı) -> ½»»¥ÊäÈëºóÖØ½ø²Ëµ¥
+echo [ÌáÊ¾] Î´Ê¶±ğÄ£Ê½ "%MODE%", ÇëÔÚ²Ëµ¥ÖĞÑ¡Ôñ.
 pause
 goto :MENU
 
-rem --- æ¨¡å¼1: å±€åŸŸç½‘ (è‡ªåŠ¨æ¢æµ‹å…¬ç½‘IP) ---
+rem --- Ä£Ê½1: ¾ÖÓòÍø (×Ô¶¯Ì½²â¹«ÍøIP) ---
 :MODE_LAN
 set "PORT=8080"
-set /p "PORT=  WebSocket ç«¯å£? [8080]: "
+set /p "PORT=  WebSocket ¶Ë¿Ú? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT%"
 echo.
-echo [å¯åŠ¨] å±€åŸŸç½‘æ¨¡å¼ â€” è‡ªåŠ¨æ¢æµ‹å…¬ç½‘ IP (3s)ï¼Œå¯åŠ¨ HTTP çŠ¶æ€é¡µï¼Œè‡ªåŠ¨æ‰“å¼€æµè§ˆå™¨
+echo [Æô¶¯] ¾ÖÓòÍøÄ£Ê½ -- ×Ô¶¯Ì½²â¹«Íø IP (3s), Æô¶¯ HTTP ×´Ì¬Ò³, ×Ô¶¯´ò¿ªä¯ÀÀÆ÷
 goto :DO_START
 
-rem --- æ¨¡å¼2: å±€åŸŸç½‘å¿«é€Ÿ ---
+rem --- Ä£Ê½2: ¾ÖÓòÍø¿ìËÙ ---
 :MODE_LAN_FAST
 set "PORT=8080"
-set /p "PORT=  WebSocket ç«¯å£? [8080]: "
+set /p "PORT=  WebSocket ¶Ë¿Ú? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT% --no-public-ip"
 echo.
-echo [å¯åŠ¨] å±€åŸŸç½‘å¿«é€Ÿæ¨¡å¼ â€” è·³è¿‡å…¬ç½‘æ¢æµ‹ï¼Œå¯åŠ¨ HTTP çŠ¶æ€é¡µ
+echo [Æô¶¯] ¾ÖÓòÍø¿ìËÙÄ£Ê½ -- Ìø¹ı¹«ÍøÌ½²â, Æô¶¯ HTTP ×´Ì¬Ò³
 goto :DO_START
 
-rem --- æ¨¡å¼3: å…¬ç½‘ç©¿é€ ---
+rem --- Ä£Ê½3: ¹«Íø´©Í¸ ---
 :MODE_TUNNEL
 set "PORT=8080"
-set /p "PORT=  WebSocket ç«¯å£? [8080]: "
+set /p "PORT=  WebSocket ¶Ë¿Ú? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 echo.
-echo  å¸¸è§ç©¿é€åœ°å€ç¤ºä¾‹:
-echo    frp:       wss://game.abc.com:8843
-echo    ngrok:     ws://xxxx.ngrok.io
-echo    cloudflared:  wss://xxxx.cfargotunnel.com
-echo    å…¬ç½‘IP:    ws://ä½ çš„å…¬ç½‘IP:8080
+echo  ³£¼û´©Í¸µØÖ·Ê¾Àı:
+echo    frp:         wss://game.abc.com:8843
+echo    ngrok:       ws://xxxx.ngrok.io
+echo    cloudflared: wss://xxxx.cfargotunnel.com
+echo    ¹«ÍøIP:      ws://ÄãµÄ¹«ÍøIP:8080
 echo.
-set /p "PUB_URL=  å…¬ç½‘ ws:// å®Œæ•´åœ°å€?: "
+set /p "PUB_URL=  ¹«Íø ws:// ÍêÕûµØÖ·?: "
 if "%PUB_URL%"=="" (
-    echo [å–æ¶ˆ] æœªå¡«å…¬ç½‘åœ°å€ï¼Œé€€å‡ºã€‚
+    echo [È¡Ïû] Î´Ìî¹«ÍøµØÖ·, ÍË³ö.
     pause
     goto :MENU
 )
 set "ARGS=%PORT% --no-public-ip --public-url %PUB_URL%"
 echo.
-echo [å¯åŠ¨] ç©¿é€æ¨¡å¼ â€” å…¬ç½‘åœ°å€ = %PUB_URL%
+echo [Æô¶¯] ´©Í¸Ä£Ê½ -- ¹«ÍøµØÖ· = %PUB_URL%
 goto :DO_START
 
-rem --- æ¨¡å¼4: æœåŠ¡å™¨åå° ---
+rem --- Ä£Ê½4: ·şÎñÆ÷ºóÌ¨ ---
 :MODE_SERVER
 set "PORT=8080"
-set /p "PORT=  WebSocket ç«¯å£? [8080]: "
+set /p "PORT=  WebSocket ¶Ë¿Ú? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT% --no-public-ip --no-open --no-http"
 echo.
-echo [å¯åŠ¨] æœåŠ¡å™¨åå°æ¨¡å¼ â€” æ—  HTTP çŠ¶æ€é¡µã€ä¸è‡ªåŠ¨å¼€æµè§ˆå™¨
+echo [Æô¶¯] ·şÎñÆ÷ºóÌ¨Ä£Ê½ -- ÎŞ HTTP ×´Ì¬Ò³, ²»×Ô¶¯¿ªä¯ÀÀÆ÷
 goto :DO_START
 
-rem --- æ¨¡å¼5: å¼€å‘è€… (mvn build) ---
+rem --- Ä£Ê½5: ¿ª·¢Õß (mvn build) ---
 :MODE_BUILD
 where mvn >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] æœªæ£€æµ‹åˆ° mvnï¼Œè¯·å…ˆå®‰è£… Maven 3.9+ å¹¶é…ç½® PATHã€‚
+    echo [´íÎó] Î´¼ì²âµ½ mvn, ÇëÏÈ°²×° Maven 3.9+ ²¢ÅäÖÃ PATH.
     pause
     exit /b 1
 )
-echo [æ„å»º] mvn clean package -DskipTests ...
+echo [¹¹½¨] mvn clean package -DskipTests ...
 call mvn clean package -DskipTests
 if errorlevel 1 (
-    echo [é”™è¯¯] æ„å»ºå¤±è´¥ï¼Œè¯·æ£€æŸ¥æ§åˆ¶å°è¾“å‡ºã€‚
+    echo [´íÎó] ¹¹½¨Ê§°Ü, Çë¼ì²é¿ØÖÆÌ¨Êä³ö.
     pause
     goto :MENU
 )
-echo [æ„å»º] å®Œæˆã€‚
-rem æ„å»ºåé‡æ–°å®šä½ jar
+echo [¹¹½¨] Íê³É.
+rem ¹¹½¨ºóÖØĞÂ¶¨Î» jar
 set "JAR_FILE="
 for /f "delims=" %%f in ('dir /b target\DGLabWebSocketRelay-*.jar 2^>nul ^| findstr /v shaded') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" set "JAR_FILE=target\DGLab-Relay-Server.jar"
 set "ARGS=8080 --no-public-ip"
 goto :DO_START
 
-rem --- æ¨¡å¼6: æœ€ç®€ ---
+rem --- Ä£Ê½6: ×î¼ò ---
 :MODE_QUICK
 set "ARGS=8080"
 goto :DO_START
 
-rem --- æ¨¡å¼7: è‡ªå®šä¹‰å‘½ä»¤è¡Œ ---
+rem --- Ä£Ê½7: ×Ô¶¨ÒåÃüÁîĞĞ ---
 :MODE_CUSTOM
 echo.
-echo  å·²æ‹¼å‘½ä»¤è¡Œ:
-echo    java %JAVA_OPTS% -jar "%JAR_FILE%" [ä½ çš„å‚æ•°]
+echo  ÒÑÆ´ÃüÁîĞĞ:
+echo    java -jar "%JAR_FILE%" [ÄãµÄ²ÎÊı]
 echo.
-echo  å¯ç”¨å‚æ•° (ç›´æ¥å›è½¦è·³è¿‡):
-echo    -p / --port ^<æ•°å­—^>       æŒ‡å®š WS ç«¯å£ (é»˜è®¤ 8080)
-echo    --public-url ^<ws://...^>   å…¬ç½‘ç©¿é€å®Œæ•´åœ°å€
-echo    --no-public-ip            è·³è¿‡å…¬ç½‘æ¢æµ‹
-echo    --no-open                 ä¸è‡ªåŠ¨å¼€æµè§ˆå™¨
-echo    --no-http                 ä¸å¯åŠ¨ HTTP çŠ¶æ€é¡µ
+echo  ¿ÉÓÃ²ÎÊı (Ö±½Ó»Ø³µÌø¹ı):
+echo    -p / --port ^<Êı×Ö^>       Ö¸¶¨ WS ¶Ë¿Ú (Ä¬ÈÏ 8080)
+echo    --public-url ^<ws://...^>   ¹«Íø´©Í¸ÍêÕûµØÖ·
+echo    --no-public-ip            Ìø¹ı¹«ÍøÌ½²â
+echo    --no-open                 ²»×Ô¶¯¿ªä¯ÀÀÆ÷
+echo    --no-http                 ²»Æô¶¯ HTTP ×´Ì¬Ò³
 echo.
-set /p "ARGS=  å®Œæ•´å‘½ä»¤è¡Œå‚æ•°: "
+set /p "ARGS=  ÍêÕûÃüÁîĞĞ²ÎÊı: "
 goto :DO_START
 
 rem ================================================================
-rem 6. çœŸæ­£å¯åŠ¨
+rem 6. ÕæÕıÆô¶¯
 rem ================================================================
 :DO_START
 if not exist "%JAR_FILE%" (
     echo.
-    echo [é”™è¯¯] æ‰¾ä¸åˆ° jar: "%JAR_FILE%"
-    echo        è¯·å…ˆ mvn clean package -DskipTestsï¼Œæˆ–åˆ‡æ¢åˆ° å¼€å‘è€…æ¨¡å¼ è‡ªåŠ¨æ„å»ºã€‚
+    echo [´íÎó] ÕÒ²»µ½ jar: "%JAR_FILE%"
+    echo        ÇëÏÈ mvn clean package -DskipTests, »òÇĞ»»µ½ ¿ª·¢ÕßÄ£Ê½ ×Ô¶¯¹¹½¨.
     echo.
     pause
     exit /b 1
 )
 echo.
-echo â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-echo  java %JAVA_OPTS% -jar "%JAR_FILE%" %ARGS%
-echo â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+echo ================================================
+echo  java -jar "%JAR_FILE%" %ARGS%
+echo ================================================
 echo.
-java %JAVA_OPTS% -jar "%JAR_FILE%" %ARGS%
+java -jar "%JAR_FILE%" %ARGS%
 echo.
-echo è¿›ç¨‹å·²ç»“æŸï¼Œé€€å‡ºç  %ERRORLEVEL%
+echo ½ø³ÌÒÑ½áÊø, ÍË³öÂë %ERRORLEVEL%
 pause
 exit /b 0
