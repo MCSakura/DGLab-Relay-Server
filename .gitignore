@@ -1,0 +1,18 @@
+# Maven
+target/
+*.iml
+.idea/
+.vscode/
+
+# Java
+*.class
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时
+*.tmp
+*.bak
+*.swp
