@@ -2,40 +2,33 @@
 setlocal EnableDelayedExpansion
 
 rem ================================================================
-rem DG-LAB (郊狼) WebSocket 中转服务 启动脚本 (Windows / 简体中文)
-rem 说明: 本脚本使用 GBK 编码保存, 与 Windows CMD 默认代码页对齐,
-rem       所以既支持中文菜单也不会因编码问题报"不是内部或外部命令".
-rem 双击本文件 -> 交互式菜单选择模式 -> 启动
-rem 也可以命令行带参数跳过菜单:
-rem   start.bat lan              局域网模式 (自动探测公网IP、启动HTTP状态页)
-rem   start.bat lan-fast         局域网快速模式 (跳过公网探测)
-rem   start.bat tunnel <ws-url>  穿透模式
-rem   start.bat server           服务器后台模式 (不自动开浏览器)
-rem   start.bat build            开发者模式 (mvn package 后再启动)
-rem   start.bat quick            最简: 8080 + 默认参数
+rem DG-LAB Relay Server - Windows Launcher
+rem Usage:
+rem   Double-click this file -> interactive menu
+rem   Or CLI: start.bat lan-fast | tunnel <ws-url> | server | build | quick
 rem ================================================================
 
-rem --- 0. 切到脚本所在目录 (双击启动时也能找到 jar) ---
+rem --- 0. cd to script dir (portable, works even when double-clicked) ---
 cd /d "%~dp0"
 
-rem --- 1. 自动定位 jar (优先 target/ 下带版本的产物, 再兜底 target/DGLab-Relay-Server.jar) ---
+rem --- 1. auto-locate shaded jar ---
 set "JAR_FILE="
 for /f "delims=" %%f in ('dir /b target\DGLabWebSocketRelay-*.jar 2^>nul ^| findstr /v shaded') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" for /f "delims=" %%f in ('dir /b target\DGLab-Relay-Server.jar 2^>nul') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" set "JAR_FILE=target\DGLab-Relay-Server.jar"
 
-rem --- 2. java 自检 ---
+rem --- 2. java self-check ---
 where java >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未检测到 Java, 请先安装 JDK 17+ 并配置 PATH.
-    echo        下载: https://adoptium.net/
+    echo [ERROR] Java not found. Please install JDK 17+ and add to PATH.
+    echo         Download: https://adoptium.net/
     pause
     exit /b 1
 )
 for /f "tokens=3" %%v in ('java -version 2^>^&1 ^| findstr /i "version"') do set "JAVA_VER=%%~v"
-echo [环境] Java %JAVA_VER%
+echo [ENV] Java %JAVA_VER%
 
-rem --- 3. 命令行参数解析 ---
+rem --- 3. CLI arg parsing ---
 set "MODE=%~1"
 if /i "%MODE%"=="lan-gui"   set "MODE=lan"
 if /i "%MODE%"=="network"   set "MODE=lan"
@@ -44,24 +37,24 @@ if /i "%MODE%"=="no-http"   set "MODE=server"
 
 if not "%MODE%"=="" goto :RUN_MODE
 
-rem --- 4. 主菜单 ---
+rem --- 4. Main menu ---
 :MENU
 cls
-echo ========================================================
-echo    DG-LAB 郊狼 WebSocket 中转服务  启动器
-echo ========================================================
+echo +=======================================================+
+echo ^|    DG-LAB Relay Server  -  Launcher                  ^|
+echo +=======================================================+
 echo.
-echo   [1] 局域网模式       -- 同一 WiFi 手机连电脑, 自动探测公网IP
-echo   [2] 局域网快速模式   -- 跳过公网探测, 启动更快 (推荐开发调试)
-echo   [3] 穿透模式         -- frp / ngrok / cloudflared 公网部署
-echo   [4] 服务器后台模式   -- 不自动开浏览器, 不含 HTTP 状态页
-echo   [5] 开发者模式       -- 从源码构建后再启动 (需 mvn)
-echo   [6] 最简启动         -- 端口 8080, 默认所有参数
-echo   [7] 自定义参数       -- 自己拼命令行
+echo   [1] LAN mode         - same WiFi, auto public IP detect
+echo   [2] LAN fast         - skip public IP detect, faster
+echo   [3] Tunnel/frp       - public deploy with tunnel
+echo   [4] Server/headless  - no HTTP page, no auto-open
+echo   [5] Dev/build        - mvn package then run
+echo   [6] Quick            - port 8080, all defaults
+echo   [7] Custom           - enter args manually
 echo.
-echo   [Q] 退出
+echo   [Q] Quit
 echo.
-set /p "CHOICE=请选择模式 [1-7 / Q]: "
+set /p "CHOICE=Select mode [1-7 / Q]: "
 if "%CHOICE%"=="" goto :RUN_MODE
 if /i "%CHOICE%"=="1" set "MODE=lan"      & goto :RUN_MODE
 if /i "%CHOICE%"=="2" set "MODE=lan-fast" & goto :RUN_MODE
@@ -74,13 +67,13 @@ if /i "%CHOICE%"=="Q" exit /b 0
 goto :MENU
 
 rem ================================================================
-rem 5. 执行对应模式
+rem 5. Dispatch
 rem ================================================================
 :RUN_MODE
 
 echo.
-echo   - 工作目录: %CD%
-echo   - JAR 文件: %JAR_FILE%
+echo   - Dir:  %CD%
+echo   - Jar:  %JAR_FILE%
 echo.
 
 if /i "%MODE%"=="lan"      goto :MODE_LAN
@@ -91,127 +84,125 @@ if /i "%MODE%"=="build"    goto :MODE_BUILD
 if /i "%MODE%"=="quick"    goto :MODE_QUICK
 if /i "%MODE%"=="custom"   goto :MODE_CUSTOM
 
-rem 默认 (未识别模式 / 无参数) -> 交互输入后重进菜单
-echo [提示] 未识别模式 "%MODE%", 请在菜单中选择.
+echo [WARN] Unknown mode "%MODE%" - returning to menu.
 pause
 goto :MENU
 
-rem --- 模式1: 局域网 (自动探测公网IP) ---
+rem --- 1: LAN ---
 :MODE_LAN
 set "PORT=8080"
-set /p "PORT=  WebSocket 端口? [8080]: "
+set /p "PORT=  WebSocket port? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT%"
 echo.
-echo [启动] 局域网模式 -- 自动探测公网 IP (3s), 启动 HTTP 状态页, 自动打开浏览器
+echo [START] LAN mode - detect public IP, enable HTTP page, auto-open browser
 goto :DO_START
 
-rem --- 模式2: 局域网快速 ---
+rem --- 2: LAN fast ---
 :MODE_LAN_FAST
 set "PORT=8080"
-set /p "PORT=  WebSocket 端口? [8080]: "
+set /p "PORT=  WebSocket port? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT% --no-public-ip"
 echo.
-echo [启动] 局域网快速模式 -- 跳过公网探测, 启动 HTTP 状态页
+echo [START] LAN fast - skip public IP detect
 goto :DO_START
 
-rem --- 模式3: 公网穿透 ---
+rem --- 3: Tunnel ---
 :MODE_TUNNEL
 set "PORT=8080"
-set /p "PORT=  WebSocket 端口? [8080]: "
+set /p "PORT=  WebSocket port? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 echo.
-echo  常见穿透地址示例:
+echo  Common tunnel examples:
 echo    frp:         wss://game.abc.com:8843
 echo    ngrok:       ws://xxxx.ngrok.io
 echo    cloudflared: wss://xxxx.cfargotunnel.com
-echo    公网IP:      ws://你的公网IP:8080
+echo    public IP:   ws://YOUR_PUBLIC_IP:8080
 echo.
-set /p "PUB_URL=  公网 ws:// 完整地址?: "
+set /p "PUB_URL=  Public ws:// full URL: "
 if "%PUB_URL%"=="" (
-    echo [取消] 未填公网地址, 退出.
+    echo [CANCEL] No URL entered.
     pause
     goto :MENU
 )
 set "ARGS=%PORT% --no-public-ip --public-url %PUB_URL%"
 echo.
-echo [启动] 穿透模式 -- 公网地址 = %PUB_URL%
+echo [START] Tunnel mode - public URL = %PUB_URL%
 goto :DO_START
 
-rem --- 模式4: 服务器后台 ---
+rem --- 4: Server/headless ---
 :MODE_SERVER
 set "PORT=8080"
-set /p "PORT=  WebSocket 端口? [8080]: "
+set /p "PORT=  WebSocket port? [8080]: "
 if "%PORT%"=="" set "PORT=8080"
 set "ARGS=%PORT% --no-public-ip --no-open --no-http"
 echo.
-echo [启动] 服务器后台模式 -- 无 HTTP 状态页, 不自动开浏览器
+echo [START] Server mode - no HTTP page, no auto-open
 goto :DO_START
 
-rem --- 模式5: 开发者 (mvn build) ---
+rem --- 5: Dev/build ---
 :MODE_BUILD
 where mvn >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未检测到 mvn, 请先安装 Maven 3.9+ 并配置 PATH.
+    echo [ERROR] Maven not found. Install Maven 3.9+ and add to PATH.
     pause
     exit /b 1
 )
-echo [构建] mvn clean package -DskipTests ...
+echo [BUILD] mvn clean package -DskipTests ...
 call mvn clean package -DskipTests
 if errorlevel 1 (
-    echo [错误] 构建失败, 请检查控制台输出.
+    echo [ERROR] Build failed. Check console output.
     pause
     goto :MENU
 )
-echo [构建] 完成.
-rem 构建后重新定位 jar
+echo [BUILD] Done.
 set "JAR_FILE="
 for /f "delims=" %%f in ('dir /b target\DGLabWebSocketRelay-*.jar 2^>nul ^| findstr /v shaded') do set "JAR_FILE=target\%%f"
 if "%JAR_FILE%"=="" set "JAR_FILE=target\DGLab-Relay-Server.jar"
 set "ARGS=8080 --no-public-ip"
 goto :DO_START
 
-rem --- 模式6: 最简 ---
+rem --- 6: Quick ---
 :MODE_QUICK
 set "ARGS=8080"
 goto :DO_START
 
-rem --- 模式7: 自定义命令行 ---
+rem --- 7: Custom ---
 :MODE_CUSTOM
 echo.
-echo  已拼命令行:
-echo    java -jar "%JAR_FILE%" [你的参数]
+echo  Command template:
+echo    java -jar "%JAR_FILE%" [your args]
 echo.
-echo  可用参数 (直接回车跳过):
-echo    -p / --port ^<数字^>       指定 WS 端口 (默认 8080)
-echo    --public-url ^<ws://...^>   公网穿透完整地址
-echo    --no-public-ip            跳过公网探测
-echo    --no-open                 不自动开浏览器
-echo    --no-http                 不启动 HTTP 状态页
+echo  Available flags:
+echo    -p / --port ^<num^>         WS port (default 8080)
+echo    --public-url ^<ws://...^>   tunnel public URL
+echo    --no-public-ip             skip public IP detection
+echo    --no-open                  do not auto-open browser
+echo    --no-http                  disable HTTP status page
 echo.
-set /p "ARGS=  完整命令行参数: "
+set /p "ARGS=  Full args: "
 goto :DO_START
 
 rem ================================================================
-rem 6. 真正启动
+rem 6. Launch
 rem ================================================================
 :DO_START
 if not exist "%JAR_FILE%" (
     echo.
-    echo [错误] 找不到 jar: "%JAR_FILE%"
-    echo        请先 mvn clean package -DskipTests, 或切换到 开发者模式 自动构建.
+    echo [ERROR] Jar not found: "%JAR_FILE%"
+    echo         Run Dev mode (option 5) first, or mvn package manually.
     echo.
     pause
     exit /b 1
 )
 echo.
-echo ================================================
-echo  java -jar "%JAR_FILE%" %ARGS%
-echo ================================================
+echo +===============================================+
+echo ^|  java -jar "%JAR_FILE%" %ARGS%
+echo +===============================================+
 echo.
 java -jar "%JAR_FILE%" %ARGS%
 echo.
-echo 进程已结束, 退出码 %ERRORLEVEL%
+echo Process exited with code %ERRORLEVEL%
 pause
 exit /b 0
